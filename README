@@ -1,0 +1,59 @@
+How to get started with gnet-makefile and gschem.
+
+Type "gschem Makefile.sch" to take a peek at the flow. To get started, you'll
+need to type "./makebootstrap.sh" to make this into a Makefile. Note that you
+don't have to do this again in this project: once you have the initial Makefile
+you may modify Makefile.sch as needed. Make will figure out when it needs to
+update Makefile.
+
+Now, just type "make". Since the schematics don't exist, make will launch gschem
+to create example.1.sch. As of 1.8 gschem is a bit clumsy when creating a new
+file, sorry. Enter some circuitry for this page, save it, and quit gschem. Make
+will then launch gschem to create example.2.sch. Once you've saved and quit,
+make will launch gnetlist twice, creating example.net and example.parts.txt.
+
+Flows consist of alternating files and rules. Files are passive, rules read and
+write. Pins on the symbols have arrows indicating flow direction. Files have
+writers and readers, rules have prerequisites and targets. A file with no writer
+must be created outside the flow (make will complain if it doesn't exist). A
+file with no reader is an endpoint, and since no rule will have have it as a
+prerequisite, the only way to make it is to ask for it explicitly from the
+command line. A rule must have at least one target (output) but needs no
+prerequisites.
+
+The device= attribute controls the role of a symbol.
+
+device=makefile-prolog
+device=makefile-epilog
+
+Symbols of this type just hold literal text in the value= attributes. The text
+is placed at the beginning or end of the Makefile.
+
+device=makefile-rule
+
+Symbols of this type represent rules. They have pins of
+pintype=from-prerequisites and pintype=to-target. They generally have a recipe=
+attribute holding a shell script that preforms the prequisite-to-target
+transformation.
+
+device=makefile-command
+
+A special case of a rule. These symbols represent named targets that are not
+actual files ("phony targets" in make jargon). So, these have no to-target pin.
+The target is given in the value= attribute. With no recipe, a command just
+triggers the construction of its prerequisites. Use a recipe= attribute for a
+command that does something (like an interactive simulation) but has no output
+that is part of the flow.
+
+device=file
+
+Symbols of this type represent files. They may represent multiple files:
+gnet-makefile creates the list from all source= and file= attributes attached to
+the refdes. It's handy to use source= for schematics and file= for others: this
+makes hierarchy navigation in gschem work right with Makefile schematics.
+
+Todo:
+
+Need a way to find and represent indirect prerequisites ("make depend").
+
+Need a "one-way" combiner for end points like "make clean".
